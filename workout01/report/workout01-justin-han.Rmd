@@ -1,0 +1,113 @@
+---
+title: "workout01-justin-han"
+author: "Justin Han"
+output: github_document
+---
+```{r}
+library(knitr)
+library(dplyr)
+```
+
+#Narrative
+
+###Introduction
+
+The Golden State Warriors (GSW) are known for their tremendous shooting and record breaking stats. The splash brothers, Stephen Curry and Klay Thompson, are some of the league's most deadly shooters. Stephen Curry broke an NBA record for most three point shots made in a single game (13 three pointers made!) and Klay Thompson broke a record for most points in a quarter (37 points!). If that's not enough, the Golden State Warriors also set a league record with 73 wins! With Kevin Durant, another lethal shooter, all-star, and scoring machine, who signed with the Warriors in the off season, this team is now a living nightmare in the NBA. In this report, we will examine the shooting efficiency of the GSW during the 2016 NBA season.
+
+###Motivation
+
+The purpose for this report is to get a sense of how well the Golden State Warriors shot in the 2016 NBA season. 
+
+###Background
+
+Before getting started, data of five Warriors (Stephen Curry, Klay Thompson, Draymond Green, Andre Iguodala, and Kevin Durant) were collected. Through data cleaning and preparation, a combined table of the shots data of the five players was created. Additionally, shot charts of each of the five players were generated in order to provide a visual complement to the numerical data. Lastly, three tables were created, for 2 point shots, 3 point shots, and all shots in general, to display the shooting efficiencies of each player.
+
+###Data
+
+```{r}
+#Data cleaning and preparation
+column_types <- c("team_name"="character", "game_date"="character", "season"="integer", "period"="integer", "minutes_remaining"="integer", "seconds_remaining"="integer", "shot_made_flag"="character", "action_type"="character", "shot_type"="character", "shot_distance"="integer", "opponent"="character", "x"="integer", "y"="integer")
+curry <- read.csv("../data/stephen-curry.csv", header = T, colClasses = column_types, stringsAsFactors = FALSE)
+thompson <- read.csv("../data/klay-thompson.csv", header = T, colClasses = column_types, stringsAsFactors = FALSE)
+green <- read.csv("../data/draymond-green.csv", header = T, colClasses = column_types, stringsAsFactors = FALSE)
+iguodala <- read.csv("../data/andre-iguodala.csv", header = T, colClasses = column_types, stringsAsFactors = FALSE)
+durant <- read.csv("../data/kevin-durant.csv", header = T, colClasses = column_types, stringsAsFactors = FALSE)
+
+curry_name <- rep("Stephen Curry", length(curry$team_name))
+thompson_name <- rep("Klay Thompson", length(thompson$team_name))
+green_name <- rep("Draymond Green", length(green$team_name))
+iguodala_name <- rep("Andre Iguodala", length(iguodala$team_name))
+durant_name <- rep("Kevin Durant", length(durant$team_name))
+
+curry$name <- curry_name
+thompson$name <- thompson_name
+green$name <- green_name
+iguodala$name <- iguodala_name
+durant$name <- durant_name
+
+curry$shot_made_flag[curry$shot_made_flag=="y"] <- "shot_yes"
+curry$shot_made_flag[curry$shot_made_flag=="n"] <- "shot_no"
+thompson$shot_made_flag[thompson$shot_made_flag=="y"] <- "shot_yes"
+thompson$shot_made_flag[thompson$shot_made_flag=="n"] <- "shot_no"
+green$shot_made_flag[green$shot_made_flag=="y"] <- "shot_yes"
+green$shot_made_flag[green$shot_made_flag=="n"] <- "shot_no"
+iguodala$shot_made_flag[iguodala$shot_made_flag=="y"] <- "shot_yes"
+iguodala$shot_made_flag[iguodala$shot_made_flag=="n"] <- "shot_no"
+durant$shot_made_flag[durant$shot_made_flag=="y"] <- "shot_yes"
+durant$shot_made_flag[durant$shot_made_flag=="n"] <- "shot_no"
+
+curry$minute <- (curry$period * 12) - curry$minutes_remaining
+thompson$minute <- (thompson$period * 12) - thompson$minutes_remaining
+green$minute <- (green$period * 12) - green$minutes_remaining
+iguodala$minute <- (iguodala$period * 12) - iguodala$minutes_remaining
+durant$minute <- (durant$period * 12) - durant$minutes_remaining
+
+#Create combined table
+combined_data <- rbind(curry, thompson, green, iguodala, durant)
+head(combined_data)
+```
+
+###Shot Charts
+
+```{r}
+knitr::include_graphics("../images/gsw-shot-charts.png")
+```
+These are the shot charts for each of the five players. From these charts, it can be seen that Andre Iguodala attempted the least amount of shots, as opposed to Stephen Curry, who took the most amount of shots during the 2016 NBA season.  
+
+###Effective Shooting Percentage
+
+```{r}
+shots_data <- read.csv("../data/shots-data.csv", header = T, stringsAsFactors = FALSE)
+
+shooting_perc_2pt <- data.frame(arrange(summarise(
+  group_by(shots_data, name),
+  total_2pt = sum(shot_type == "2PT Field Goal"),
+  made = sum(shot_made_flag == "shot_yes" & shot_type == "2PT Field Goal"),
+  perc_made = made/total_2pt
+), desc = perc_made))
+
+shooting_perc_3pt <- data.frame(arrange(summarise(
+  group_by(shots_data, name),
+  total_3pt = sum(shot_type == "3PT Field Goal"),
+  made = sum(shot_made_flag == "shot_yes" & shot_type == "3PT Field Goal"),
+  perc_made = made/total_3pt
+), desc = perc_made))
+
+shooting_perc <- data.frame(arrange(summarise(
+  group_by(shots_data, name),
+  total = length(shot_type),
+  made = sum(shot_made_flag == "shot_yes"),
+  perc_made = made/total
+), desc = perc_made))
+
+shooting_perc_2pt
+shooting_perc_3pt
+shooting_perc
+```
+
+###Conclusions
+
+Many would think that Stephen Curry had the highest shooting percentage in 2 point and 3 point shots made during the 2016 NBA season. However, by examining the data, it shows that Andre Iguodala actually had the highest 2 point field goal percentage and Klay Thompson had the highest 3 point field goal percentage. Furthermore, Kevin Durant was the most efficient player out of the five, as he had the highest combined shooting percentage. If the shooting percentage were to be ignored, then it is clear that Stephen Curry had the most attempted and made shots out of the five players. Overall, the GSW were a relatively efficient shooting team during the 2016 NBA season. 
+
+###References
+https://en.wikipedia.org/wiki/2015%E2%80%9316_Golden_State_Warriors_season
